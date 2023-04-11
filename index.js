@@ -19,6 +19,31 @@ const urlSchema = new Schema({
 
 let Url = mongoose.model("Urls", urlSchema);
 
+const originalUrls = [];
+const shortUrls = [];
+
+async function getUrls(){
+
+  let urls = await Url.find();
+
+  urls.map(u => (
+    originalUrls.push(u.original_url)
+  ));
+  
+}
+
+async function getShortUrls(){
+
+  let urls = await Url.find();
+
+  urls.map(u => (
+    shortUrls.push(u.short_url)
+  ));
+}
+
+getUrls();
+getShortUrls();
+
 app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
@@ -34,8 +59,7 @@ app.get('/api/hello', function(req, res) {
   res.json({ greeting: 'hello API' });
 });
 
-const originalUrls = [];
-const shortUrls = [];
+
 
 app.post('/api/shorturl', (req, res, done) => {
   const url = req.body.url;
@@ -47,8 +71,14 @@ app.post('/api/shorturl', (req, res, done) => {
   if(url.match(urlRegex)) {
     if(foundIndex < 0)
     {
+      let newUrl = Url.create({
+        original_url: url,
+        short_url: shortUrls.length
+      });
       originalUrls.push(url);
       shortUrls.push(shortUrls.length);
+
+      
 
       return res.json({
         original_url: url,
